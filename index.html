@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f5f6f8">
+  <title>Рабочий график — 2027</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f5f6f8;
+      --card: #ffffff;
+      --ink: #20242b;
+      --muted: #838b98;
+      --line: #edf0f3;
+      --red: #d94c4c;
+      --red-bg: #fff0ef;
+      --green: #26824c;
+      --green-bg: #eaf7ee;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--page);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      width: min(100%, 540px);
+      margin: 0 auto;
+      padding: max(30px, env(safe-area-inset-top)) 18px max(28px, env(safe-area-inset-bottom));
+    }
+
+    .heading { margin: 0 0 22px 3px; }
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: 29px;
+      line-height: 1.15;
+      font-weight: 750;
+      letter-spacing: -.035em;
+    }
+
+    .calendar-card {
+      padding: 20px 17px 18px;
+      background: var(--card);
+      border: 1px solid rgba(32, 36, 43, .04);
+      border-radius: 23px;
+      box-shadow: 0 12px 34px rgba(29, 39, 54, .055);
+    }
+
+    .month-nav {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) 42px;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 22px;
+    }
+
+    .nav-button {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      color: #424a56;
+      font-size: 23px;
+      line-height: 1;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-button:disabled { opacity: .28; cursor: default; }
+    .nav-button:not(:disabled):active { background: #f3f5f7; }
+
+    .month-select-wrap { position: relative; min-width: 0; }
+    .month-select {
+      width: 100%;
+      height: 42px;
+      padding: 0 30px 0 12px;
+      border: 0;
+      border-radius: 12px;
+      appearance: none;
+      background: #f5f6f8;
+      color: var(--ink);
+      font: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      text-transform: capitalize;
+      cursor: pointer;
+    }
+    .month-select-wrap::after {
+      content: "";
+      position: absolute;
+      top: 15px;
+      right: 13px;
+      width: 8px;
+      height: 8px;
+      border-right: 1.7px solid #7d8693;
+      border-bottom: 1.7px solid #7d8693;
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+
+    .weekdays, .days-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 7px;
+    }
+    .weekdays { margin-bottom: 8px; }
+    .weekday {
+      display: grid;
+      place-items: center;
+      min-height: 27px;
+      color: #9aa1ab;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .day, .empty-day {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1 / 1;
+      min-width: 0;
+      border-radius: 13px;
+    }
+    .day {
+      font-size: 15px;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .day.red { color: var(--red); background: var(--red-bg); }
+    .day.green { color: var(--green); background: var(--green-bg); }
+
+    .legend {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 18px;
+      margin-top: 23px;
+      padding-top: 17px;
+      border-top: 1px solid var(--line);
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #737c89;
+      font-size: 12px;
+      font-weight: 550;
+    }
+    .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .dot.red { background: var(--red); }
+    .dot.green { background: var(--green); }
+
+    .year-label {
+      margin: 17px 0 0;
+      color: #a0a7b1;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    @media (max-width: 370px) {
+      .app { padding-left: 13px; padding-right: 13px; }
+      .calendar-card { padding: 16px 12px 15px; }
+      .weekdays, .days-grid { gap: 5px; }
+      .day, .empty-day { border-radius: 10px; }
+      .day { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="heading">
+      <p class="eyebrow">Календарь на 2027 год</p>
+      <h1>Рабочий график</h1>
+    </header>
+
+    <section class="calendar-card" aria-label="Календарь на 2027 год">
+      <div class="month-nav">
+        <button class="nav-button" id="prev-month" type="button" aria-label="Предыдущий месяц">‹</button>
+        <div class="month-select-wrap">
+          <select class="month-select" id="month-select" aria-label="Выбрать месяц"></select>
+        </div>
+        <button class="nav-button" id="next-month" type="button" aria-label="Следующий месяц">›</button>
+      </div>
+
+      <div class="weekdays" aria-hidden="true">
+        <div class="weekday">ПН</div>
+        <div class="weekday">ВТ</div>
+        <div class="weekday">СР</div>
+        <div class="weekday">ЧТ</div>
+        <div class="weekday">ПТ</div>
+        <div class="weekday">СБ</div>
+        <div class="weekday">ВС</div>
+      </div>
+
+      <div class="days-grid" id="days-grid" role="grid" aria-label="Дни выбранного месяца"></div>
+
+      <div class="legend" aria-label="Обозначения">
+        <span class="legend-item"><span class="dot red"></span>Рабочие дни</span>
+        <span class="legend-item"><span class="dot green"></span>Выходные</span>
+      </div>
+    </section>
+    <p class="year-label">2027</p>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const YEAR = 2027;
+      const MONTHS = [
+        'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+        'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
+      ];
+      const monthSelect = document.getElementById('month-select');
+      const daysGrid = document.getElementById('days-grid');
+      const prevButton = document.getElementById('prev-month');
+      const nextButton = document.getElementById('next-month');
+      let currentMonth = 0;
+
+      MONTHS.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = String(index);
+        option.textContent = month;
+        monthSelect.appendChild(option);
+      });
+
+      function getDayColor(monthIndex, dayNumber) {
+        const date = Date.UTC(YEAR, monthIndex, dayNumber);
+        const firstDay = Date.UTC(YEAR, 0, 1);
+        const dayIndex = Math.floor((date - firstDay) / 86400000);
+        const phase = dayIndex % 4;
+        return phase === 0 || phase === 3 ? 'red' : 'green';
+      }
+
+      function renderMonth() {
+        daysGrid.replaceChildren();
+        const firstWeekday = (new Date(YEAR, currentMonth, 1).getDay() + 6) % 7;
+        const daysInMonth = new Date(YEAR, currentMonth + 1, 0).getDate();
+
+        for (let i = 0; i < firstWeekday; i += 1) {
+          const empty = document.createElement('div');
+          empty.className = 'empty-day';
+          empty.setAttribute('aria-hidden', 'true');
+          daysGrid.appendChild(empty);
+        }
+
+        for (let day = 1; day <= daysInMonth; day += 1) {
+          const cell = document.createElement('div');
+          const color = getDayColor(currentMonth, day);
+          cell.className = `day ${color}`;
+          cell.textContent = String(day);
+          cell.setAttribute('role', 'gridcell');
+          cell.setAttribute('aria-label', `${day} ${MONTHS[currentMonth]}, ${color === 'red' ? 'рабочий день' : 'выходной'}`);
+          daysGrid.appendChild(cell);
+        }
+
+        monthSelect.value = String(currentMonth);
+        prevButton.disabled = currentMonth === 0;
+        nextButton.disabled = currentMonth === 11;
+      }
+
+      prevButton.addEventListener('click', () => {
+        if (currentMonth > 0) {
+          currentMonth -= 1;
+          renderMonth();
+        }
+      });
+
+      nextButton.addEventListener('click', () => {
+        if (currentMonth < 11) {
+          currentMonth += 1;
+          renderMonth();
+        }
+      });
+
+      monthSelect.addEventListener('change', (event) => {
+        const selected = Number(event.target.value);
+        if (Number.isInteger(selected) && selected >= 0 && selected < 12) {
+          currentMonth = selected;
+          renderMonth();
+        }
+      });
+
+      renderMonth();
+    })();
+  </script>
+</body>
+</html>
