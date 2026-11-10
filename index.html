@@ -271,7 +271,7 @@
         const firstDay = Date.UTC(2027, 0, 1);
         const dayIndex = Math.floor((date - firstDay) / 86400000);
         const phase = ((dayIndex % 4) + 4) % 4;
-        return phase === 0 || phase === 1 ? 'red' : 'green';
+        return phase === 0 || phase === 3 ? 'red' : 'green';
       }
 
       function renderMonth() {
