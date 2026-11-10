@@ -17,6 +17,7 @@
       --red-bg: #fff0ef;
       --green: #26824c;
       --green-bg: #eaf7ee;
+      --work-time: #b52f2f;
     }
 
     * { box-sizing: border-box; }
@@ -139,9 +140,20 @@
       border-radius: 13px;
     }
     .day {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
       font-size: 15px;
       font-weight: 650;
       font-variant-numeric: tabular-nums;
+    }
+    .day .hours {
+      font-size: 8px;
+      line-height: 1;
+      font-weight: 650;
+      white-space: nowrap;
+      letter-spacing: -.03em;
     }
     .day.red { color: var(--red); background: var(--red-bg); }
     .day.green { color: var(--green); background: var(--green-bg); }
@@ -180,17 +192,18 @@
       .weekdays, .days-grid { gap: 5px; }
       .day, .empty-day { border-radius: 10px; }
       .day { font-size: 14px; }
+      .day .hours { font-size: 7px; }
     }
   </style>
 </head>
 <body>
   <main class="app">
     <header class="heading">
-      <p class="eyebrow">Календарь на 2027 год</p>
+      <p class="eyebrow">Календарь на 2026–2027 год</p>
       <h1>Рабочий график</h1>
     </header>
 
-    <section class="calendar-card" aria-label="Календарь на 2027 год">
+    <section class="calendar-card" aria-label="Календарь на 2026–2027 год">
       <div class="month-nav">
         <button class="nav-button" id="prev-month" type="button" aria-label="Предыдущий месяц">‹</button>
         <div class="month-select-wrap">
@@ -216,14 +229,13 @@
         <span class="legend-item"><span class="dot green"></span>Выходные</span>
       </div>
     </section>
-    <p class="year-label">2027</p>
+    <p class="year-label">Рабочие дни: 10:00–20:00</p>
   </main>
 
   <script>
     (() => {
       'use strict';
 
-      const YEAR = 2027;
       const MONTHS = [
         'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
         'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'
@@ -232,27 +244,43 @@
       const daysGrid = document.getElementById('days-grid');
       const prevButton = document.getElementById('prev-month');
       const nextButton = document.getElementById('next-month');
+      const MONTHS_WITH_YEARS = [
+        { year: 2026, month: 11, label: 'декабрь 2026' },
+        ...MONTHS.map((label, month) => ({ year: 2027, month, label: label + ' 2027' }))
+      ];
+      const WORK_DAYS = {
+        '2026-12': [3,4,7,8,11,12,15,16,19,20,23,24,27,28,30],
+        '2027-01': [5,8,9,12,13,16,17,20,21,24,25,28,29]
+      };
       let currentMonth = 0;
 
-      MONTHS.forEach((month, index) => {
+      MONTHS_WITH_YEARS.forEach((item, index) => {
         const option = document.createElement('option');
         option.value = String(index);
-        option.textContent = month;
+        option.textContent = item.label;
         monthSelect.appendChild(option);
       });
 
-      function getDayColor(monthIndex, dayNumber) {
-        const date = Date.UTC(YEAR, monthIndex, dayNumber);
-        const firstDay = Date.UTC(YEAR, 0, 1);
+      function getDayColor(year, monthIndex, dayNumber) {
+        const key = year + '-' + String(monthIndex + 1).padStart(2, '0');
+        if (Object.prototype.hasOwnProperty.call(WORK_DAYS, key)) {
+          return WORK_DAYS[key].includes(dayNumber) ? 'red' : 'green';
+        }
+
+        const date = Date.UTC(year, monthIndex, dayNumber);
+        const firstDay = Date.UTC(2027, 0, 1);
         const dayIndex = Math.floor((date - firstDay) / 86400000);
-        const phase = dayIndex % 4;
-        return phase === 0 || phase === 3 ? 'red' : 'green';
+        const phase = ((dayIndex % 4) + 4) % 4;
+        return phase === 0 || phase === 1 ? 'red' : 'green';
       }
 
       function renderMonth() {
         daysGrid.replaceChildren();
-        const firstWeekday = (new Date(YEAR, currentMonth, 1).getDay() + 6) % 7;
-        const daysInMonth = new Date(YEAR, currentMonth + 1, 0).getDate();
+        const selectedMonth = MONTHS_WITH_YEARS[currentMonth];
+        const year = selectedMonth.year;
+        const month = selectedMonth.month;
+        const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
 
         for (let i = 0; i < firstWeekday; i += 1) {
           const empty = document.createElement('div');
@@ -263,17 +291,26 @@
 
         for (let day = 1; day <= daysInMonth; day += 1) {
           const cell = document.createElement('div');
-          const color = getDayColor(currentMonth, day);
+          const color = getDayColor(year, month, day);
           cell.className = `day ${color}`;
-          cell.textContent = String(day);
+          cell.textContent = '';
+          const number = document.createElement('span');
+          number.textContent = String(day);
+          cell.appendChild(number);
+          if (color === 'red') {
+            const hours = document.createElement('span');
+            hours.className = 'hours';
+            hours.textContent = '10–20';
+            cell.appendChild(hours);
+          }
           cell.setAttribute('role', 'gridcell');
-          cell.setAttribute('aria-label', `${day} ${MONTHS[currentMonth]}, ${color === 'red' ? 'рабочий день' : 'выходной'}`);
+          cell.setAttribute('aria-label', `${day} ${MONTHS[month]} ${year}, ${color === 'red' ? 'рабочий день с 10:00 до 20:00' : 'выходной'}`);
           daysGrid.appendChild(cell);
         }
 
         monthSelect.value = String(currentMonth);
         prevButton.disabled = currentMonth === 0;
-        nextButton.disabled = currentMonth === 11;
+        nextButton.disabled = currentMonth === MONTHS_WITH_YEARS.length - 1;
       }
 
       prevButton.addEventListener('click', () => {
@@ -284,7 +321,7 @@
       });
 
       nextButton.addEventListener('click', () => {
-        if (currentMonth < 11) {
+        if (currentMonth < MONTHS_WITH_YEARS.length - 1) {
           currentMonth += 1;
           renderMonth();
         }
@@ -292,7 +329,7 @@
 
       monthSelect.addEventListener('change', (event) => {
         const selected = Number(event.target.value);
-        if (Number.isInteger(selected) && selected >= 0 && selected < 12) {
+        if (Number.isInteger(selected) && selected >= 0 && selected < MONTHS_WITH_YEARS.length) {
           currentMonth = selected;
           renderMonth();
         }
